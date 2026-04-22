@@ -1,53 +1,28 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
-import { Platform } from 'react-native';
-
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
-
 export const Colors = {
-  light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
-  },
-  dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
-  },
+  cream:   '#F5F0E8',
+  creamD:  '#EDE5D8',
+  sand:    '#E4D9C8',
+  sandD:   '#D5C8B4',
+  teal:    '#2A9D8F',
+  tealD:   '#1d7a6e',
+  tealL:   '#E4F4F2',
+  blue:    '#2C6E8A',
+  blueL:   '#E3EEF4',
+  ink:     '#1A1714',
+  brown:   '#7A5C45',
+  muted:   '#8C7B6B',
+  border:  '#DDD0BF',
+  white:   '#FDFAF6',
+  green:   '#16A34A',
+  greenL:  '#DCFCE7',
+  red:     '#D62839',
+  redL:    '#FEE2E2',
+  amber:   '#F59E0B',
+  amberL:  '#FEF3C7',
 };
 
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
-  },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
-  },
-  web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    serif: "Georgia, 'Times New Roman', serif",
-    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
-  },
-});
+export const roleColor = (role: 'morador' | 'comercio') =>
+  role === 'morador' ? Colors.teal : Colors.blue;
+
+export const roleColorLight = (role: 'morador' | 'comercio') =>
+  role === 'morador' ? Colors.tealL : Colors.blueL;
