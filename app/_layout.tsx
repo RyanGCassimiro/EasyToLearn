@@ -13,7 +13,7 @@ function RootLayoutNav() {
     if (loading) return;
 
     const inAuthGroup = segments[0] === '(auth)';
-    const isPublicRoute = segments[0] === 'index' || segments[0] === 'cadastro';
+    const isPublicRoute = segments[0] === 'index' || segments[0] === 'login';
 
     if (!user && !isPublicRoute) {
       router.replace('/');

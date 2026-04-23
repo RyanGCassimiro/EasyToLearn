@@ -8,24 +8,42 @@ import { useAuth } from '../context/AuthContext';
 import { Colors } from '../constants/theme';
 import InputField from '../components/InputField';
 
-export default function Login() {
+export default function Cadastro() {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const router = useRouter();
-  const { signIn } = useAuth();
+  const { signUp } = useAuth();
 
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [terms, setTerms] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Preencha e-mail e senha.');
+  const accent = Colors.teal;
+
+  const handleCadastro = async () => {
+    if (!name || !email || !password) {
+      Alert.alert('Preencha todos os campos obrigatórios.');
+      return;
+    }
+    if (password !== confirm) {
+      Alert.alert('As senhas não coincidem.');
+      return;
+    }
+    if (!terms) {
+      Alert.alert('Aceite os Termos de Serviço para continuar.');
       return;
     }
     setLoading(true);
     try {
-      await signIn(email, password, 'user');
+      await signUp({
+        name,
+        email,
+        role: 'user',
+        password,
+      });
       router.replace('/dashboard');
     } catch (e: any) {
       Alert.alert('Erro', e.message);
@@ -34,62 +52,51 @@ export default function Login() {
     }
   };
 
-  const fillDemo = () => {
-    setEmail('wan@gmail.com');
-    setPassword('123456');
-  };
-
-  const accent = Colors.teal;
-
   const form = (
-    <View style={s.form}>
-      <Text style={s.formTitle}>Acesse sua conta</Text>
-      <Text style={[s.formSub, { color: accent }]}>LOGIN</Text>
+    <ScrollView contentContainerStyle={s.form}>
+      <Text style={s.title}>Cadastro</Text>
 
-      <InputField
-        label="E-mail"
-        value={email}
-        onChangeText={setEmail}
-        placeholder="e-mail@email.com"
-        keyboardType="email-address"
-        accentColor={accent}
-      />
-      <InputField
-        label="Senha"
-        value={password}
-        onChangeText={setPassword}
-        placeholder="ex: Abc123"
-        isPassword
-        accentColor={accent}
-      />
+      <InputField label="Nome" value={name} onChangeText={setName} placeholder="Seu nome completo" accentColor={accent} />
+      <InputField label="E-mail" value={email} onChangeText={setEmail} placeholder="e-mail@email.com" keyboardType="email-address" accentColor={accent} />
+      <View style={s.row}>
+        <View style={{ flex: 1, marginRight: 8 }}>
+          <InputField label="Senha" value={password} onChangeText={setPassword} placeholder="Mínimo 6 caracteres" isPassword accentColor={accent} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <InputField label="Confirmar Senha" value={confirm} onChangeText={setConfirm} placeholder="Repita a senha" isPassword accentColor={accent} />
+        </View>
+      </View>
+
+      <TouchableOpacity style={s.checkRow} onPress={() => setTerms(t => !t)}>
+        <View style={[s.check, terms && { backgroundColor: accent, borderColor: accent }]}>
+          {terms && <Text style={s.checkMark}>✓</Text>}
+        </View>
+        <Text style={s.checkLabel}>
+          Concordo com os{' '}
+          <Text style={[s.checkLabelLink, { color: accent }]}>Termos de Serviço e Políticas de Privacidade</Text>
+        </Text>
+      </TouchableOpacity>
 
       <TouchableOpacity
         style={[s.btnPrimary, { backgroundColor: accent }]}
-        onPress={handleLogin}
+        onPress={handleCadastro}
         disabled={loading}
       >
-        <Text style={s.btnPrimaryText}>{loading ? 'Entrando...' : 'Entrar'}</Text>
+        <Text style={s.btnPrimaryText}>{loading ? 'Criando conta...' : 'Criar Conta'}</Text>
       </TouchableOpacity>
 
-      <View style={s.row}>
-        <TouchableOpacity onPress={() => router.push('/cadastro')}>
-          <Text style={[s.link, { color: accent }]}>Registrar</Text>
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity style={s.btnDemo} onPress={fillDemo}>
-        <Text style={[s.btnDemoText, { color: accent }]}>Preencher dados demo</Text>
+      <TouchableOpacity style={s.loginLink} onPress={() => router.back()}>
+        <Text style={[s.loginLinkText, { color: accent }]}>Já possui conta? Fazer Login!</Text>
       </TouchableOpacity>
 
-      <Text style={s.forgot}>Esqueci minha senha</Text>
       <Text style={s.footer}>EASY© 2026</Text>
-    </View>
+    </ScrollView>
   );
 
   if (isDesktop) {
     return (
       <View style={[s.desktop, { backgroundColor: accent }]}>
-        <View style={[s.desktopLeft, { backgroundColor: accent }]}>
+        <View style={s.desktopLeft}>
           <Text style={s.logoLarge}>
             E<Text style={s.logoEm}>a</Text>sy
           </Text>
@@ -101,115 +108,36 @@ export default function Login() {
   }
 
   return (
-    <ScrollView style={{ backgroundColor: Colors.cream }} contentContainerStyle={s.mobile}>
+    <View style={{ flex: 1, backgroundColor: Colors.cream }}>
       <View style={[s.mobileLogo, { backgroundColor: accent }]}>
         <Text style={s.logoLarge}>
           E<Text style={s.logoEm}>a</Text>sy
         </Text>
-        <Text style={s.tagline}>nunca foi tão fácil se conectar com pessoas</Text>
       </View>
       {form}
-    </ScrollView>
+    </View>
   );
 }
 
 const s = StyleSheet.create({
-  desktop: {
-    flex: 1,
-    flexDirection: 'row',
-  },
-  desktopLeft: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 48,
-  },
-  desktopRight: {
-    flex: 1,
-    backgroundColor: Colors.cream,
-    justifyContent: 'center',
-    padding: 48,
-  },
-  mobile: {
-    flexGrow: 1,
-  },
-  mobileLogo: {
-    padding: 48,
-    alignItems: 'center',
-  },
-  form: {
-    padding: 32,
-  },
-  logoLarge: {
-    fontSize: 56,
-    fontWeight: '800',
-    color: Colors.white,
-    letterSpacing: -1,
-  },
-  logoEm: {
-    fontStyle: 'italic',
-  },
-  tagline: {
-    fontSize: 14,
-    color: Colors.white,
-    opacity: 0.85,
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  formTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: Colors.ink,
-    marginTop: 24,
-    marginBottom: 2,
-  },
-  formSub: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1,
-    marginBottom: 20,
-  },
-  btnPrimary: {
-    borderRadius: 999,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  btnPrimaryText: {
-    color: Colors.white,
-    fontWeight: '700',
-    fontSize: 15,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 12,
-  },
-  link: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  btnDemo: {
-    marginTop: 16,
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderRadius: 999,
-    backgroundColor: Colors.sand,
-  },
-  btnDemoText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  forgot: {
-    textAlign: 'center',
-    color: Colors.muted,
-    fontSize: 13,
-    marginTop: 14,
-  },
-  footer: {
-    textAlign: 'center',
-    color: Colors.border,
-    fontSize: 11,
-    marginTop: 32,
-  },
+  desktop: { flex: 1, flexDirection: 'row' },
+  desktopLeft: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 48 },
+  desktopRight: { flex: 1, backgroundColor: Colors.cream },
+  mobileLogo: { padding: 32, alignItems: 'center' },
+  form: { padding: 32 },
+  title: { fontSize: 26, fontWeight: '700', color: Colors.ink, marginTop: 20, marginBottom: 20 },
+  row: { flexDirection: 'row' },
+  logoLarge: { fontSize: 48, fontWeight: '800', color: Colors.white, letterSpacing: -1 },
+  logoEm: { fontStyle: 'italic' },
+  tagline: { fontSize: 14, color: Colors.white, opacity: 0.85, marginTop: 8, textAlign: 'center' },
+  checkRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16, marginTop: 4 },
+  check: { width: 20, height: 20, borderRadius: 4, borderWidth: 1.5, borderColor: Colors.border, marginRight: 10, alignItems: 'center', justifyContent: 'center' },
+  checkMark: { color: Colors.white, fontSize: 12, fontWeight: '700' },
+  checkLabel: { flex: 1, fontSize: 13, color: Colors.muted },
+  checkLabelLink: { fontWeight: '600' },
+  btnPrimary: { borderRadius: 999, paddingVertical: 14, alignItems: 'center', marginBottom: 16 },
+  btnPrimaryText: { color: Colors.white, fontWeight: '700', fontSize: 15 },
+  loginLink: { alignItems: 'center', paddingVertical: 8 },
+  loginLinkText: { fontSize: 14, fontWeight: '600' },
+  footer: { textAlign: 'center', color: Colors.border, fontSize: 11, marginTop: 24 },
 });
