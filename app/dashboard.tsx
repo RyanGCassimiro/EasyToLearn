@@ -11,6 +11,8 @@ import { db } from '../lib/firebase';
 
 type Tab = 'perfil' | 'acesso' | 'admin';
 
+const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 type Aviso = { id: string; titulo: string; mensagem: string; categoria: string; data: string };
 type Reserva = { id: string; local: string; dia: string; mes: string; descricao: string };
@@ -27,6 +29,8 @@ export default function Dashboard() {
 
   const [tab, setTab] = useState<Tab>('perfil');
   const [blockedModal, setBlockedModal] = useState(false);
+  const [reservaModal, setReservaModal] = useState(false);
+  const [novaReservaModal, setNovaReservaModal] = useState({ local: 'Salão de Festas', dia: '', mes: MESES[new Date().getMonth()] });
 
   // Avisos
   const [avisosDB, setAvisosDB] = useState<Aviso[]>([]);
@@ -134,6 +138,17 @@ export default function Dashboard() {
     setReservasDB(prev => prev.filter(r => r.id !== id));
   };
 
+  const salvarReservaModal = async () => {
+    if (!db || !novaReservaModal.dia || !novaReservaModal.mes) return;
+    const ano = new Date().getFullYear().toString();
+    const dados = { local: novaReservaModal.local, dia: novaReservaModal.dia, mes: novaReservaModal.mes, ano, descricao: '', uid: user.uid };
+    const newRef = push(ref(db, 'reservas'));
+    await set(newRef, dados);
+    setReservasDB(prev => [...prev, { id: newRef.key!, ...dados }]);
+    setNovaReservaModal({ local: 'Salão de Festas', dia: '', mes: MESES[new Date().getMonth()] });
+    setReservaModal(false);
+  };
+
   // ─── Sidebar ────────────────────────────────────────────────────────────────
   const sidebar = (
     <View style={[s.sidebar, { backgroundColor: accent }]}>
@@ -153,6 +168,9 @@ export default function Dashboard() {
       <View style={s.navItems}>
         <NavItem label="Meu Perfil" active={tab === 'perfil'} onPress={() => setTab('perfil')} />
         <NavItem label="Acesso ao Banco" active={tab === 'acesso'} onPress={() => setTab('acesso')} />
+        {!isAdmin && (
+          <NavItem label="Reservar Espaço" active={false} onPress={() => setReservaModal(true)} />
+        )}
         {isAdmin && (
           <NavItem label="Admin Data" active={tab === 'admin'} onPress={() => setTab('admin')} />
         )}
@@ -178,6 +196,23 @@ export default function Dashboard() {
 
       {!isAdmin && (
         <>
+          <Text style={s.sectionLabel}>🏛 MINHAS RESERVAS</Text>
+          <View style={[s.card, { borderLeftColor: Colors.teal }]}>
+            {reservasDB.filter(r => (r as any).uid === user.uid).length === 0
+              ? <Text style={s.emptyText}>Nenhuma reserva feita ainda.</Text>
+              : reservasDB.filter(r => (r as any).uid === user.uid).map((res, i, arr) => (
+                <View key={res.id} style={[{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 }, i < arr.length - 1 && { borderBottomWidth: 1, borderBottomColor: Colors.border }]}>
+                  <View>
+                    <Text style={s.crudTitle}>{res.local}</Text>
+                    <Text style={s.crudDate}>{res.dia} de {res.mes} • {(res as any).ano ?? new Date().getFullYear()}</Text>
+                  </View>
+                  <TouchableOpacity onPress={() => deletarReserva(res.id)} style={[s.btnDelete, { marginTop: 0 }]}>
+                    <Text style={s.btnDeleteText}>🗑</Text>
+                  </TouchableOpacity>
+                </View>
+              ))
+            }
+          </View>
           <Text style={s.sectionLabel}>📢 AVISOS DO CONDOMÍNIO</Text>
           {avisosDB.length === 0 && <Text style={s.emptyText}>Nenhum aviso no momento.</Text>}
           {avisosDB.map((item) => {
@@ -233,7 +268,7 @@ export default function Dashboard() {
           { path: '/usuarios (lista completa)', allowed: isAdmin },
           { path: '/admin_data', allowed: isAdmin },
           { path: '/avisos', allowed: true },
-          { path: '/reservas', allowed: isAdmin },
+          { path: '/reservas', allowed: true },
         ].map((item, i) => (
           <View key={i} style={s.permRow}>
             <Text style={s.permPath}>{item.path}</Text>
@@ -491,6 +526,49 @@ export default function Dashboard() {
         </Pressable>
       )}
 
+      {/* ── Modal Reservar Espaço (morador) ── */}
+      {reservaModal && (
+        <Pressable style={s.modalOverlay} onPress={() => setReservaModal(false)}>
+          <Pressable style={s.modalBox} onPress={(e) => e.stopPropagation()}>
+            <Text style={s.modalIcon}></Text>
+            <Text style={[s.modalTitle, { color: Colors.ink }]}>Reservar Espaço</Text>
+            <Text style={[s.modalBody, { marginBottom: 4 }]}>Escolha o espaço e a data. A reserva é para o dia todo.</Text>
+
+            <Text style={s.reservaLabel}>ESPAÇO</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
+              {LOCAIS.map(loc => (
+                <TouchableOpacity
+                  key={loc}
+                  onPress={() => setNovaReservaModal(p => ({ ...p, local: loc }))}
+                  style={[s.catChip, novaReservaModal.local === loc && { backgroundColor: Colors.teal }]}
+                >
+                  <Text style={[s.catChipText, novaReservaModal.local === loc && { color: Colors.white }]}>{loc}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            <CalendarioSimples
+              mes={novaReservaModal.mes}
+              diaSelecionado={novaReservaModal.dia}
+              onSelectDia={dia => setNovaReservaModal(p => ({ ...p, dia }))}
+              onChangeMes={mes => setNovaReservaModal(p => ({ ...p, mes, dia: '' }))}
+              accent={Colors.teal}
+            />
+
+            <TouchableOpacity
+              style={[s.modalBtn, { backgroundColor: novaReservaModal.dia ? Colors.teal : Colors.muted }]}
+              onPress={salvarReservaModal}
+              disabled={!novaReservaModal.dia}
+            >
+              <Text style={s.modalBtnText}>Confirmar Reserva</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[s.modalBtn, { backgroundColor: Colors.sand, marginTop: 4 }]} onPress={() => setReservaModal(false)}>
+              <Text style={[s.modalBtnText, { color: Colors.muted }]}>Cancelar</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      )}
+
       {/* ── Modal Acesso Negado ── */}
       {blockedModal && (
         <Pressable style={s.modalOverlay} onPress={() => setBlockedModal(false)}>
@@ -534,6 +612,72 @@ function DataRow({ icon, value }: { icon: string; value: string }) {
     </View>
   );
 }
+
+const ANO_ATUAL = new Date().getFullYear();
+const DIAS_SEMANA = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+
+function CalendarioSimples({ mes, diaSelecionado, onSelectDia, onChangeMes, accent }: {
+  mes: string; diaSelecionado: string;
+  onSelectDia: (d: string) => void;
+  onChangeMes: (m: string) => void;
+  accent: string;
+}) {
+  const hoje = new Date();
+  const mesIdx = MESES.indexOf(mes);
+  const totalDias = new Date(ANO_ATUAL, mesIdx + 1, 0).getDate();
+  const primeiroDia = new Date(ANO_ATUAL, mesIdx, 1).getDay();
+  const cells: (number | null)[] = [...Array(primeiroDia).fill(null), ...Array.from({ length: totalDias }, (_, i) => i + 1)];
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  const mesAtualIdx = hoje.getMonth();
+  const isPrevDisabled = mesIdx === mesAtualIdx;
+  const isPasado = (dia: number) => mesIdx < mesAtualIdx || (mesIdx === mesAtualIdx && dia < hoje.getDate());
+
+  const prevMes = () => { if (!isPrevDisabled) onChangeMes(MESES[(mesIdx + 11) % 12]); };
+  const nextMes = () => onChangeMes(MESES[(mesIdx + 1) % 12]);
+
+  return (
+    <View style={{ marginBottom: 16 }}>
+      <View style={cal.header}>
+        <TouchableOpacity onPress={prevMes} style={cal.navBtn} disabled={isPrevDisabled}><Text style={[cal.navTxt, isPrevDisabled && { opacity: 0.2 }]}>‹</Text></TouchableOpacity>
+        <Text style={cal.mesAno}>{mes} {ANO_ATUAL}</Text>
+        <TouchableOpacity onPress={nextMes} style={cal.navBtn}><Text style={cal.navTxt}>›</Text></TouchableOpacity>
+      </View>
+      <View style={cal.grid}>
+        {DIAS_SEMANA.map((d, i) => (
+          <View key={i} style={cal.cell}><Text style={cal.weekDay}>{d}</Text></View>
+        ))}
+        {cells.map((dia, i) => {
+          const selected = dia !== null && diaSelecionado === String(dia);
+          const passado = dia !== null && isPasado(dia);
+          return (
+            <TouchableOpacity
+              key={i}
+              disabled={dia === null || passado}
+              onPress={() => dia && !passado && onSelectDia(String(dia))}
+              style={[cal.cell, selected && { backgroundColor: accent, borderRadius: 999 }]}
+            >
+              <Text style={[cal.dayTxt, passado && { color: Colors.border }, selected && { color: Colors.white, fontWeight: '700' }]}>
+                {dia ?? ''}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+const cal = StyleSheet.create({
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+  navBtn: { padding: 8 },
+  navTxt: { fontSize: 20, color: Colors.ink, fontWeight: '600' },
+  mesAno: { fontSize: 15, fontWeight: '700', color: Colors.ink },
+  grid: { flexDirection: 'row', flexWrap: 'wrap' },
+  cell: { width: `${100 / 7}%` as any, alignItems: 'center', paddingVertical: 6 },
+  weekDay: { fontSize: 11, fontWeight: '700', color: Colors.muted },
+  dayTxt: { fontSize: 13, color: Colors.ink },
+});
 
 // ─── Estilos ─────────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
@@ -633,6 +777,7 @@ const s = StyleSheet.create({
   modalEm: { fontWeight: '700', color: Colors.ink },
   modalBtn: { marginTop: 8, paddingVertical: 12, alignItems: 'center', borderRadius: 999 },
   modalBtnText: { color: Colors.white, fontWeight: '700', fontSize: 15 },
+  reservaLabel: { fontSize: 11, fontWeight: '700', color: Colors.muted, letterSpacing: 0.8, marginBottom: 6, textTransform: 'uppercase' as const },
   avisosListItem: {
     flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10,
     borderBottomWidth: 1, borderBottomColor: Colors.border,

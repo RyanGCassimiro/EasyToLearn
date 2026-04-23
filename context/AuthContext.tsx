@@ -50,6 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
+        await firebaseUser.getIdToken(true);
         const userData = await loadUserFromDB(firebaseUser.uid);
         setUser(userData);
       } else {
@@ -83,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Salva no banco ANTES de fazer logout
       if (db) {
+        await result.user.getIdToken(true);
         await set(ref(db, `usuarios/${result.user.uid}`), newUser);
       }
 
