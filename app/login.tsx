@@ -50,7 +50,9 @@ export default function Login() {
 
   const form = (
     <View style={s.form}>
-      <RoleToggle value={role} onChange={setRole} />
+      <View style={s.toggleContainer}>
+        <RoleToggle value={role} onChange={setRole} />
+      </View>
 
       <Text style={s.formTitle}>Acesse sua conta</Text>
       <Text style={[s.formSub, { color: accent }]}>LOGIN</Text>
@@ -191,8 +193,12 @@ const s = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     marginTop: 12,
+  },
+  toggleContainer: {
+    alignItems: 'center',
+    marginBottom: 8,
   },
   link: {
     fontSize: 14,
