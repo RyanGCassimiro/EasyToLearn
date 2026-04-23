@@ -32,6 +32,7 @@ export default function Dashboard() {
   const { user, signOut } = useAuth();
   const [tab, setTab] = useState<Tab>('perfil');
   const [blockedModal, setBlockedModal] = useState(false);
+  const [avisosModal, setAvisosModal] = useState(false);
 
   if (!user) {
     router.replace('/');
@@ -80,7 +81,7 @@ export default function Dashboard() {
             </TouchableOpacity>
           </>
         )}
-        <TouchableOpacity style={s.navItem}>
+        <TouchableOpacity style={s.navItem} onPress={() => setAvisosModal(true)}>
           <Text style={s.navItemText}>Avisos</Text>
         </TouchableOpacity>
       </View>
@@ -106,12 +107,7 @@ export default function Dashboard() {
           <Text style={s.dataIcon}>✉</Text>
           <Text style={s.dataValue}>{user.email}</Text>
         </View>
-        {user.cpf && (
-          <View style={s.dataRow}>
-            <Text style={s.dataIcon}>🪪</Text>
-            <Text style={s.dataValue}>{user.cpf}</Text>
-          </View>
-        )}
+
         {user.unidade && (
           <View style={s.dataRow}>
             <Text style={s.dataIcon}>🏠</Text>
@@ -251,6 +247,24 @@ export default function Dashboard() {
         </View>
       )}
 
+      {avisosModal && (
+        <Pressable style={s.modalOverlay} onPress={() => setAvisosModal(false)}>
+          <Pressable style={s.modalBox} onPress={(e) => e.stopPropagation()}>
+            <Text style={s.modalIcon}>📢</Text>
+            <Text style={s.modalTitle}>Avisos do Condomínio</Text>
+            {MOCK_PUBLIC_DATA.map((item, i) => (
+              <View key={i} style={[s.avisoItem, { borderLeftColor: accent }]}>
+                <Text style={[s.avisoTitulo, { color: accent }]}>{item.titulo}</Text>
+                <Text style={s.avisoMsg}>{item.mensagem}</Text>
+              </View>
+            ))}
+            <TouchableOpacity style={[s.modalBtn, { backgroundColor: accent }]} onPress={() => setAvisosModal(false)}>
+              <Text style={s.modalBtnText}>Fechar</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      )}
+
       {blockedModal && (
         <Pressable style={s.modalOverlay} onPress={() => setBlockedModal(false)}>
           <Pressable style={s.modalBox} onPress={(e) => e.stopPropagation()}>
@@ -333,6 +347,9 @@ const s = StyleSheet.create({
   modalEm: { fontWeight: '700', color: Colors.ink },
   modalBtn: { marginTop: 8, paddingVertical: 12, paddingHorizontal: 32, borderRadius: 999 },
   modalBtnText: { color: Colors.white, fontWeight: '700', fontSize: 15 },
+  avisoItem: { width: '100%', borderLeftWidth: 3, paddingLeft: 12, paddingVertical: 6, marginBottom: 8 },
+  avisoTitulo: { fontSize: 14, fontWeight: '700', marginBottom: 2 },
+  avisoMsg: { fontSize: 13, color: Colors.muted, lineHeight: 18 },
   mobileHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, paddingTop: 48 },
   mobileHeaderLogo: { fontSize: 22, fontWeight: '800', color: Colors.white },
   mobileSignOut: { color: Colors.white, opacity: 0.8, fontSize: 14 },
