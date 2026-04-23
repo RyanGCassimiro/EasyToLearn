@@ -1,50 +1,143 @@
-# Welcome to your Expo app 👋
+# 🔐 Sistema de Login e Cadastro com Firebase
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## 📌 Sobre o Projeto
 
-## Get started
+Este projeto consiste em uma aplicação web simples que implementa um sistema de **login e cadastro de usuários**, utilizando autenticação baseada em e-mail e senha. O objetivo é demonstrar, de forma prática, como integrar autenticação, armazenamento de dados e controle de acesso utilizando serviços do Firebase.
 
-1. Install dependencies
+---
 
-   ```bash
-   npm install
-   ```
+## 🚀 Tecnologias Utilizadas
 
-2. Start the app
+* Firebase Authentication (e-mail e senha)
+* Firebase Realtime Database
+* Firebase Security Rules
+* HTML + CSS + JavaScript puro
 
-   ```bash
-   npx expo start
-   ```
+---
 
-In the output, you'll find options to open the app in a
+## 🎯 Funcionalidades
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+* Cadastro de usuários
+* Login com e-mail e senha
+* Logout
+* Persistência de sessão
+* Armazenamento de dados no banco
+* Controle de acesso com regras de segurança
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+---
 
-## Get a fresh project
+## 📂 Estrutura de Pastas
 
-When you're ready, run:
+Com base na organização atual do projeto:
 
-```bash
-npm run reset-project
+```
+/projeto
+│
+├── app
+│   ├── _layout.tsx
+│   ├── cadastro.tsx
+│   ├── dashboard.tsx
+│   ├── index.tsx
+│   └── landing.tsx
+│
+├── assets
+│   └── prototypes
+│
+├── components
+│
+├── constants
+│
+├── context
+│
+├── lib
+│
+├── .env.example
+├── .gitignore
+├── LICENSE
+├── README.md
+├── app.json
+├── eslint.config.js
+├── package-lock.json
+├── package.json
+└── tsconfig.json
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+---
 
-## Learn more
+## 🧭 Descrição da Estrutura
 
-To learn more about developing your project with Expo, look at the following resources:
+* **app/**
+  Contém as páginas principais da aplicação:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+  * `index.tsx`: tela inicial / login
+  * `cadastro.tsx`: tela de registro de usuários
+  * `dashboard.tsx`: área logada do usuário
+  * `landing.tsx`: página pública de apresentação
+  * `_layout.tsx`: layout base da aplicação
 
-## Join the community
+* **assets/prototypes/**
+  Arquivos de prototipação e design (wireframes, layouts, etc.)
 
-Join our community of developers creating universal apps.
+* **components/**
+  Componentes reutilizáveis da interface
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+* **constants/**
+  Constantes globais da aplicação
+
+* **context/**
+  Contextos (ex: autenticação, estado global)
+
+* **lib/**
+  Configurações e integrações (ex: Firebase)
+
+---
+
+## ▶️ Como Executar
+
+1. Clone o repositório:
+
+```bash
+git clone <url-do-repositorio>
+```
+
+2. Acesse a pasta:
+
+```bash
+cd nome-do-projeto
+```
+
+3. Instale as dependências:
+
+```bash
+npm install
+```
+
+4. Inicie o projeto:
+
+```bash
+npm start
+```
+
+---
+
+## 🔒 Segurança
+
+* Autenticação via Firebase
+* Controle de acesso com regras no Realtime Database
+* Restrição de leitura e escrita por usuário autenticado
+
+---
+
+## 📈 Melhorias Futuras
+
+* Recuperação de senha
+* Verificação de e-mail
+* Responsividade completa
+* Melhor tratamento de erros
+* Integração com outros provedores de login
+
+---
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT.
