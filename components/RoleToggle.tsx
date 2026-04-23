@@ -33,7 +33,7 @@ const s = StyleSheet.create({
     backgroundColor: Colors.sand,
     borderRadius: 999,
     padding: 3,
-    alignSelf: 'flex-end',
+    alignSelf: 'center',
   },
   option: {
     paddingVertical: 6,
