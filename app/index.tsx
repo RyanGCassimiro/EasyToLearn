@@ -25,7 +25,7 @@ export default function Login() {
     }
     setLoading(true);
     try {
-      await signIn(email, password, 'user');
+      await signIn(email, password);
       router.replace('/dashboard');
     } catch (e: any) {
       Alert.alert('Erro', e.message);

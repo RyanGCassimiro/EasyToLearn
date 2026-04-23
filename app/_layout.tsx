@@ -12,7 +12,7 @@ function RootLayoutNav() {
   useEffect(() => {
     if (loading) return;
 
-    const isPublicRoute = segments.length === 0 || segments[0] === 'cadastro';
+    const isPublicRoute = segments.length === 1 && segments[0] === 'cadastro';
 
     if (!user && !isPublicRoute) {
       router.replace('/');

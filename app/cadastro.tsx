@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  ScrollView, Alert, useWindowDimensions,
+  ScrollView, useWindowDimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
@@ -20,33 +20,34 @@ export default function Cadastro() {
   const [confirm, setConfirm] = useState('');
   const [terms, setTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [role, setRole] = useState<'morador' | 'comercio'>('morador');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
-  const accent = Colors.teal;
+  const accent = role === 'morador' ? Colors.teal : Colors.blue;
 
   const handleCadastro = async () => {
+    setErrorMsg('');
+    setSuccessMsg('');
     if (!name || !email || !password) {
-      Alert.alert('Preencha todos os campos obrigatórios.');
+      setErrorMsg('Preencha todos os campos obrigatórios.');
       return;
     }
     if (password !== confirm) {
-      Alert.alert('As senhas não coincidem.');
+      setErrorMsg('As senhas não coincidem.');
       return;
     }
     if (!terms) {
-      Alert.alert('Aceite os Termos de Serviço para continuar.');
+      setErrorMsg('Aceite os Termos de Serviço para continuar.');
       return;
     }
     setLoading(true);
     try {
-      await signUp({
-        name,
-        email,
-        role: 'user',
-        password,
-      });
-      router.replace('/dashboard');
+      await signUp({ name, email, role, password });
+      setSuccessMsg('Conta criada com sucesso! Faça login para continuar.');
+      setTimeout(() => router.replace('/'), 2000);
     } catch (e: any) {
-      Alert.alert('Erro', e.message);
+      setErrorMsg(e.message);
     } finally {
       setLoading(false);
     }
@@ -55,6 +56,28 @@ export default function Cadastro() {
   const form = (
     <ScrollView contentContainerStyle={s.form}>
       <Text style={s.title}>Cadastro</Text>
+
+      {successMsg ? (
+        <View style={s.bannerSuccess}><Text style={s.bannerSuccessText}>✓ {successMsg}</Text></View>
+      ) : null}
+      {errorMsg ? (
+        <View style={s.bannerError}><Text style={s.bannerErrorText}>⚠ {errorMsg}</Text></View>
+      ) : null}
+
+      <View style={s.toggleRow}>
+        <TouchableOpacity
+          style={[s.toggleBtn, role === 'morador' && { backgroundColor: accent }]}
+          onPress={() => setRole('morador')}
+        >
+          <Text style={[s.toggleText, role === 'morador' && s.toggleTextActive]}>🏠 Morador</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[s.toggleBtn, role === 'comercio' && { backgroundColor: Colors.blue }]}
+          onPress={() => setRole('comercio')}
+        >
+          <Text style={[s.toggleText, role === 'comercio' && s.toggleTextActive]}>🏢 Comércio</Text>
+        </TouchableOpacity>
+      </View>
 
       <InputField label="Nome" value={name} onChangeText={setName} placeholder="Seu nome completo" accentColor={accent} />
       <InputField label="E-mail" value={email} onChangeText={setEmail} placeholder="e-mail@email.com" keyboardType="email-address" accentColor={accent} />
@@ -140,4 +163,12 @@ const s = StyleSheet.create({
   loginLink: { alignItems: 'center', paddingVertical: 8 },
   loginLinkText: { fontSize: 14, fontWeight: '600' },
   footer: { textAlign: 'center', color: Colors.border, fontSize: 11, marginTop: 24 },
+  toggleRow: { flexDirection: 'row', backgroundColor: Colors.sand, borderRadius: 999, padding: 4, marginBottom: 20 },
+  toggleBtn: { flex: 1, paddingVertical: 10, borderRadius: 999, alignItems: 'center' },
+  toggleText: { fontSize: 14, fontWeight: '600', color: Colors.muted },
+  toggleTextActive: { color: Colors.white },
+  bannerSuccess: { backgroundColor: Colors.greenL, borderRadius: 8, padding: 12, marginBottom: 12 },
+  bannerSuccessText: { color: Colors.green, fontWeight: '600', fontSize: 14 },
+  bannerError: { backgroundColor: Colors.redL, borderRadius: 8, padding: 12, marginBottom: 12 },
+  bannerErrorText: { color: Colors.red, fontWeight: '600', fontSize: 14 },
 });

@@ -1,20 +1,25 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as firebaseSignOut, onAuthStateChanged } from 'firebase/auth';
-import { ref, set, get, child } from 'firebase/database';
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  onAuthStateChanged,
+} from 'firebase/auth';
+import { ref, set, get } from 'firebase/database';
 import { auth, db } from '../lib/firebase';
 
-export type Role = 'admin' | 'user';
+export type Role = 'admin' | 'morador' | 'comercio';
 
 export type User = {
   uid: string;
   name: string;
   email: string;
-  role: 'admin' | 'user';
+  role: Role;
 };
 
 type AuthContextType = {
   user: User | null;
-  signIn: (email: string, password: string, role: Role) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
   signUp: (data: Omit<User, 'uid'> & { password: string }) => Promise<void>;
   signOut: () => Promise<void>;
   loading: boolean;
@@ -22,54 +27,31 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const MOCK_USERS: Record<string, User> = {
-  'wan@gmail.com': {
-    uid: 'uid_123',
-    name: 'Wanessa',
-    email: 'wan@gmail.com',
-    role: 'admin',
-  },
-  'anne@gmail.com': {
-    uid: 'uid_456',
-    name: 'Anne',
-    email: 'anne@gmail.com',
-    role: 'user',
-  },
-};
+async function loadUserFromDB(uid: string): Promise<User | null> {
+  if (!db) return null;
+  try {
+    const snapshot = await get(ref(db, `usuarios/${uid}`));
+    if (snapshot.exists()) return snapshot.val() as User;
+  } catch (e) {
+    console.warn('Erro ao ler usuário do banco:', e);
+  }
+  return null;
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const useFirebase = !!auth;
 
   useEffect(() => {
-    if (!useFirebase) {
+    if (!auth) {
       setLoading(false);
       return;
     }
 
-    const unsubscribe = onAuthStateChanged(auth!, async (firebaseUser) => {
-      if (firebaseUser && db) {
-        try {
-          const snapshot = await get(child(ref(db), `usuarios/${firebaseUser.uid}`));
-          if (snapshot.exists()) {
-            setUser(snapshot.val() as User);
-          } else {
-            const mockUser = MOCK_USERS[firebaseUser.email || ''];
-            if (mockUser) {
-              setUser({ ...mockUser, uid: firebaseUser.uid });
-            } else {
-              setUser({
-                uid: firebaseUser.uid,
-                name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
-                email: firebaseUser.email || '',
-                role: 'user',
-              });
-            }
-          }
-        } catch (error) {
-          console.warn('Error loading user data:', error);
-        }
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        const userData = await loadUserFromDB(firebaseUser.uid);
+        setUser(userData);
       } else {
         setUser(null);
       }
@@ -77,72 +59,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, [useFirebase]);
+  }, []);
 
-  const signIn = async (email: string, password: string, role: Role) => {
-    if (useFirebase && auth) {
-      try {
-        const result = await signInWithEmailAndPassword(auth, email, password);
-        const mockUser = MOCK_USERS[email];
-        if (mockUser && mockUser.role === role) {
-          const userData: User = { ...mockUser, uid: result.user.uid };
-          setUser(userData);
-
-          if (db) {
-            try {
-              await set(ref(db, `usuarios/${result.user.uid}`), userData);
-            } catch (dbError) {
-              console.warn('Error saving user to database:', dbError);
-            }
-          }
-        } else {
-          throw new Error('Cargo não corresponde ao cadastro.');
-        }
-      } catch (error: any) {
-        throw new Error('Credenciais inválidas.');
-      }
-    } else {
-      const found = MOCK_USERS[email];
-      if (found && found.role === role) {
-        setUser(found);
-      } else {
-        throw new Error('Credenciais inválidas ou cargo incorreto.');
-      }
+  const signIn = async (email: string, password: string) => {
+    if (!auth) throw new Error('Firebase não configurado.');
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      // onAuthStateChanged cuida de setar o user automaticamente
+    } catch (error: any) {
+      const code = error?.code || '';
+      if (code === 'auth/user-not-found' || code === 'auth/wrong-password' || code === 'auth/invalid-credential')
+        throw new Error('E-mail ou senha incorretos.');
+      throw new Error('Erro ao fazer login.');
     }
   };
 
   const signUp = async (data: Omit<User, 'uid'> & { password: string }) => {
+    if (!auth) throw new Error('Firebase não configurado.');
     const { password, ...userData } = data;
+    try {
+      const result = await createUserWithEmailAndPassword(auth, userData.email, password);
+      const newUser: User = { uid: result.user.uid, ...userData };
 
-    if (useFirebase && auth) {
-      try {
-        const result = await createUserWithEmailAndPassword(auth, userData.email, password);
-        const newUser: User = { uid: result.user.uid, ...userData };
-        setUser(newUser);
-
-        if (db) {
-          try {
-            await set(ref(db, `usuarios/${result.user.uid}`), newUser);
-          } catch (dbError) {
-            console.warn('Error saving new user to database:', dbError);
-          }
-        }
-      } catch (error: any) {
-        throw new Error('Erro ao criar conta.');
+      // Salva no banco ANTES de fazer logout
+      if (db) {
+        await set(ref(db, `usuarios/${result.user.uid}`), newUser);
       }
-    } else {
-      const newUser: User = { uid: `mock-uid-${Date.now()}`, ...userData };
-      setUser(newUser);
+
+      // Faz logout para o usuário confirmar pelo login
+      await firebaseSignOut(auth);
+    } catch (error: any) {
+      const code = error?.code || '';
+      if (code === 'auth/email-already-in-use') throw new Error('Este e-mail já está cadastrado.');
+      if (code === 'auth/invalid-email') throw new Error('E-mail inválido.');
+      if (code === 'auth/weak-password') throw new Error('Senha fraca. Use pelo menos 6 caracteres.');
+      if (code === 'auth/operation-not-allowed') throw new Error('Cadastro por e-mail não está habilitado no Firebase.');
+      throw new Error(error?.message || 'Erro ao criar conta.');
     }
   };
 
   const signOut = async () => {
-    if (useFirebase && auth) {
-      try {
-        await firebaseSignOut(auth);
-      } catch (error) {
-        console.error('Error signing out:', error);
-      }
+    if (auth) {
+      try { await firebaseSignOut(auth); } catch (e) {}
     }
     setUser(null);
   };
