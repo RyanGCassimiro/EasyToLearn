@@ -12,12 +12,11 @@ function RootLayoutNav() {
   useEffect(() => {
     if (loading) return;
 
-    const inAuthGroup = segments[0] === '(auth)';
-    const isPublicRoute = segments[0] === 'index' || segments[0] === 'cadastro';
+    const isPublicRoute = segments.length === 0 || segments[0] === 'cadastro';
 
     if (!user && !isPublicRoute) {
       router.replace('/');
-    } else if (user && inAuthGroup === false) {
+    } else if (user && isPublicRoute) {
       router.replace('/dashboard');
     }
   }, [user, loading, segments]);

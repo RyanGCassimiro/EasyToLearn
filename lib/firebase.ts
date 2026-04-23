@@ -13,14 +13,15 @@ const firebaseConfig = {
 // Initialize Firebase if config is available
 let app, auth, db;
 
-try {
-  if (firebaseConfig.apiKey) {
-    app = initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = getDatabase(app);
-  }
-} catch (error) {
-  console.warn('Firebase initialization warning:', error);
-}
+// Temporarily disabled - using mock auth only
+// try {
+//   if (firebaseConfig.apiKey) {
+//     app = initializeApp(firebaseConfig);
+//     auth = getAuth(app);
+//     db = getDatabase(app);
+//   }
+// } catch (error) {
+//   console.warn('Firebase initialization warning:', error);
+// }
 
 export { app, auth, db };
