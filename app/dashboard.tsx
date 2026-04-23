@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  ScrollView, useWindowDimensions,
+  ScrollView, useWindowDimensions, Modal, Pressable, Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
@@ -17,7 +17,7 @@ const MOCK_ADMIN_DATA = {
 
 const MOCK_PUBLIC_DATA = [
   { titulo: 'Manutenção programada', mensagem: 'Elevador fora de serviço das 8h–12h.' },
-  { titulo: 'Falta d'água', mensagem: 'Interrupção dia 20/04 das 9h às 14h.' },
+  { titulo: "Falta d'água", mensagem: 'Interrupção dia 20/04 das 9h às 14h.' },
 ];
 
 const MOCK_ALL_USERS = [
@@ -31,6 +31,7 @@ export default function Dashboard() {
   const router = useRouter();
   const { user, signOut } = useAuth();
   const [tab, setTab] = useState<Tab>('perfil');
+  const [blockedModal, setBlockedModal] = useState(false);
 
   if (!user) {
     router.replace('/');
@@ -41,8 +42,8 @@ export default function Dashboard() {
   const accentL = roleColorLight(user.role);
   const isComerco = user.role === 'comercio';
 
-  const handleSignOut = () => {
-    signOut();
+  const handleSignOut = async () => {
+    await signOut();
     router.replace('/');
   };
 
@@ -191,16 +192,27 @@ export default function Dashboard() {
         </>
       ) : (
         <View style={s.blockedRow}>
-          <View style={s.blockedPanel}>
-            <Text style={s.blockedIcon}>🔒</Text>
-            <Text style={s.blockedTitle}>ACESSO NEGADO</Text>
-            <Text style={s.blockedSub}>role ≠ comercio</Text>
-          </View>
-          <View style={s.blockedPanel}>
-            <Text style={s.blockedIcon}>🔒</Text>
-            <Text style={s.blockedTitle}>ACESSO NEGADO</Text>
-            <Text style={s.blockedSub}>role ≠ comercio</Text>
-          </View>
+          {(['Usuários', 'Admin Data'] as const).map((label) => (
+            <Pressable
+              key={label}
+              onPress={() => setBlockedModal(true)}
+              style={({ pressed, hovered }: any) => [
+                s.blockedPanel,
+                (hovered || pressed) && s.blockedPanelHover,
+              ]}
+            >
+              {({ pressed, hovered }: any) => (
+                <>
+                  <Text style={s.blockedIcon}>🔒</Text>
+                  <Text style={s.blockedTitle}>ACESSO NEGADO</Text>
+                  <Text style={s.blockedSub}>{label}</Text>
+                  <Text style={[s.blockedHint, (hovered || pressed) && { opacity: 1 }]}>
+                    {Platform.OS === 'web' ? 'clique para saber mais' : 'toque para saber mais'}
+                  </Text>
+                </>
+              )}
+            </Pressable>
+          ))}
         </View>
       )}
     </ScrollView>
@@ -238,12 +250,28 @@ export default function Dashboard() {
           {tab === 'perfil' ? tabPerfil : tabAcesso}
         </View>
       )}
+
+      {blockedModal && (
+        <Pressable style={s.modalOverlay} onPress={() => setBlockedModal(false)}>
+          <Pressable style={s.modalBox} onPress={(e) => e.stopPropagation()}>
+            <Text style={s.modalIcon}>🔒</Text>
+            <Text style={s.modalTitle}>Acesso Negado</Text>
+            <Text style={s.modalBody}>
+              Você não tem permissão para visualizar este conteúdo.{'\n\n'}
+              Apenas usuários com cargo <Text style={s.modalEm}>Comércio</Text> podem acessar os dados administrativos e a lista de usuários.
+            </Text>
+            <TouchableOpacity style={[s.modalBtn, { backgroundColor: accent }]} onPress={() => setBlockedModal(false)}>
+              <Text style={s.modalBtnText}>Entendi</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      )}
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  root: { flex: 1, flexDirection: 'row', backgroundColor: Colors.cream },
+  root: { flex: 1, flexDirection: 'row', backgroundColor: Colors.cream, position: 'relative' },
   sidebar: { width: 200, paddingTop: 40, paddingHorizontal: 16, paddingBottom: 24 },
   sidebarLogo: { fontSize: 28, fontWeight: '800', color: Colors.white, letterSpacing: -0.5 },
   sidebarLogoEm: { fontStyle: 'italic' },
@@ -282,10 +310,29 @@ const s = StyleSheet.create({
   rolePillText: { fontSize: 11, fontWeight: '700' },
   codeBlock: { fontFamily: 'monospace', fontSize: 12, color: Colors.ink, backgroundColor: Colors.cream, padding: 12, borderRadius: 8 },
   blockedRow: { flexDirection: 'row', gap: 16 },
-  blockedPanel: { flex: 1, backgroundColor: Colors.white, borderRadius: 12, padding: 24, alignItems: 'center', gap: 8 },
+  blockedPanel: {
+    flex: 1, backgroundColor: Colors.white, borderRadius: 12, padding: 24,
+    alignItems: 'center', gap: 8,
+    borderWidth: 2, borderColor: 'transparent',
+    ...(Platform.OS === 'web' ? { cursor: 'pointer' } as any : {}),
+  },
+  blockedPanelHover: {
+    borderColor: Colors.red,
+    backgroundColor: Colors.redL,
+    transform: [{ scale: 1.02 }],
+  },
   blockedIcon: { fontSize: 28 },
   blockedTitle: { fontSize: 14, fontWeight: '700', color: Colors.red },
   blockedSub: { fontSize: 12, color: Colors.muted },
+  blockedHint: { fontSize: 11, color: Colors.muted, opacity: 0.4, marginTop: 4 },
+  modalOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center', padding: 24, zIndex: 999 },
+  modalBox: { backgroundColor: Colors.white, borderRadius: 16, padding: 28, width: '100%', maxWidth: 400, alignItems: 'center', gap: 12 },
+  modalIcon: { fontSize: 40 },
+  modalTitle: { fontSize: 20, fontWeight: '700', color: Colors.red },
+  modalBody: { fontSize: 14, color: Colors.muted, textAlign: 'center', lineHeight: 22 },
+  modalEm: { fontWeight: '700', color: Colors.ink },
+  modalBtn: { marginTop: 8, paddingVertical: 12, paddingHorizontal: 32, borderRadius: 999 },
+  modalBtnText: { color: Colors.white, fontWeight: '700', fontSize: 15 },
   mobileHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, paddingTop: 48 },
   mobileHeaderLogo: { fontSize: 22, fontWeight: '800', color: Colors.white },
   mobileSignOut: { color: Colors.white, opacity: 0.8, fontSize: 14 },
