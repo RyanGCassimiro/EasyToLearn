@@ -3,19 +3,13 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as 
 import { ref, set, get, child } from 'firebase/database';
 import { auth, db } from '../lib/firebase';
 
-export type Role = 'morador' | 'comercio';
+export type Role = 'admin' | 'user';
 
 export type User = {
   uid: string;
-  nome: string;
+  name: string;
   email: string;
-  role: Role;
-  cpf?: string;
-  unidade?: string;
-  torre?: string;
-  cnpj?: string;
-  nome_fantasia?: string;
-  responsavel?: string;
+  role: 'admin' | 'user';
 };
 
 type AuthContextType = {
@@ -29,23 +23,17 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 const MOCK_USERS: Record<string, User> = {
-  'morador@easy.com': {
-    uid: 'mock-uid-morador',
-    nome: 'Bruno Morador',
-    email: 'morador@easy.com',
-    role: 'morador',
-    cpf: '123.456.789-00',
-    unidade: '101',
-    torre: 'Torre A',
+  'wan@gmail.com': {
+    uid: 'uid_123',
+    name: 'Wanessa',
+    email: 'wan@gmail.com',
+    role: 'admin',
   },
-  'comercio@easy.com': {
-    uid: 'mock-uid-comercio',
-    nome: 'Ana Admin',
-    email: 'comercio@easy.com',
-    role: 'comercio',
-    cnpj: '12.345.678/0001-99',
-    nome_fantasia: 'Mercado do Bairro',
-    responsavel: 'Ana Admin',
+  'anne@gmail.com': {
+    uid: 'uid_456',
+    name: 'Anne',
+    email: 'anne@gmail.com',
+    role: 'user',
   },
 };
 
@@ -73,9 +61,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             } else {
               setUser({
                 uid: firebaseUser.uid,
-                nome: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+                name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
                 email: firebaseUser.email || '',
-                role: 'morador',
+                role: 'user',
               });
             }
           }

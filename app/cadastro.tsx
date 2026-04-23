@@ -4,9 +4,8 @@ import {
   ScrollView, Alert, useWindowDimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuth, Role } from '../context/AuthContext';
-import { Colors, roleColor } from '../constants/theme';
-import RoleToggle from '../components/RoleToggle';
+import { useAuth } from '../context/AuthContext';
+import { Colors } from '../constants/theme';
 import InputField from '../components/InputField';
 
 export default function Cadastro() {
@@ -15,24 +14,17 @@ export default function Cadastro() {
   const router = useRouter();
   const { signUp } = useAuth();
 
-  const [role, setRole] = useState<Role>('morador');
-  const [nome, setNome] = useState('');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
-  const [cpf, setCpf] = useState('');
-  const [unidade, setUnidade] = useState('');
-  const [torre, setTorre] = useState('');
-  const [cnpj, setCnpj] = useState('');
-  const [nomeFan, setNomeFan] = useState('');
-  const [responsavel, setResponsavel] = useState('');
   const [terms, setTerms] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const accent = roleColor(role);
+  const accent = Colors.teal;
 
   const handleCadastro = async () => {
-    if (!nome || !email || !password) {
+    if (!name || !email || !password) {
       Alert.alert('Preencha todos os campos obrigatórios.');
       return;
     }
@@ -47,16 +39,10 @@ export default function Cadastro() {
     setLoading(true);
     try {
       await signUp({
-        nome: role === 'comercio' ? nomeFan : nome,
+        name,
         email,
-        role,
+        role: 'user',
         password,
-        cpf: role === 'morador' ? cpf : undefined,
-        unidade: role === 'morador' ? unidade : undefined,
-        torre: role === 'morador' ? torre : undefined,
-        cnpj: role === 'comercio' ? cnpj : undefined,
-        nome_fantasia: role === 'comercio' ? nomeFan : undefined,
-        responsavel: role === 'comercio' ? responsavel : undefined,
       });
       router.replace('/dashboard');
     } catch (e: any) {
@@ -68,30 +54,9 @@ export default function Cadastro() {
 
   const form = (
     <ScrollView contentContainerStyle={s.form}>
-      <RoleToggle value={role} onChange={setRole} />
       <Text style={s.title}>Cadastro</Text>
 
-      {role === 'morador' ? (
-        <>
-          <InputField label="Nome" value={nome} onChangeText={setNome} placeholder="Seu nome completo" accentColor={accent} />
-          <InputField label="CPF" value={cpf} onChangeText={setCpf} placeholder="000.000.000-00" keyboardType="numeric" accentColor={accent} />
-          <View style={s.row}>
-            <View style={{ flex: 1, marginRight: 8 }}>
-              <InputField label="Unidade" value={unidade} onChangeText={setUnidade} placeholder="101" accentColor={accent} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <InputField label="Torre/Quadra" value={torre} onChangeText={setTorre} placeholder="Torre A" accentColor={accent} />
-            </View>
-          </View>
-        </>
-      ) : (
-        <>
-          <InputField label="Nome Fantasia" value={nomeFan} onChangeText={setNomeFan} placeholder="Nome do estabelecimento" accentColor={accent} />
-          <InputField label="CNPJ" value={cnpj} onChangeText={setCnpj} placeholder="00.000.000/0001-00" keyboardType="numeric" accentColor={accent} />
-          <InputField label="Nome do Responsável" value={responsavel} onChangeText={setResponsavel} placeholder="Nome completo" accentColor={accent} />
-        </>
-      )}
-
+      <InputField label="Nome" value={name} onChangeText={setName} placeholder="Seu nome completo" accentColor={accent} />
       <InputField label="E-mail" value={email} onChangeText={setEmail} placeholder="e-mail@email.com" keyboardType="email-address" accentColor={accent} />
       <View style={s.row}>
         <View style={{ flex: 1, marginRight: 8 }}>

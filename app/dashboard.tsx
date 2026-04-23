@@ -38,9 +38,9 @@ export default function Dashboard() {
     return null;
   }
 
-  const accent = roleColor(user.role);
-  const accentL = roleColorLight(user.role);
-  const isComerco = user.role === 'comercio';
+  const accent = user.role === 'admin' ? Colors.teal : Colors.blue;
+  const accentL = user.role === 'admin' ? '#E4F4F2' : '#E3EEF4';
+  const isAdmin = user.role === 'admin';
 
   const handleSignOut = async () => {
     await signOut();
@@ -52,7 +52,7 @@ export default function Dashboard() {
       <Text style={s.sidebarLogo}>
         E<Text style={s.sidebarLogoEm}>a</Text>sy
       </Text>
-      <Text style={s.sidebarName}>{user.nome}</Text>
+      <Text style={s.sidebarName}>{user.name}</Text>
       <View style={[s.roleBadge, { backgroundColor: Colors.white + '22' }]}>
         <Text style={s.roleBadgeText}>{user.role}</Text>
       </View>
@@ -70,7 +70,7 @@ export default function Dashboard() {
         >
           <Text style={s.navItemText}>Acesso ao Banco</Text>
         </TouchableOpacity>
-        {isComerco && (
+        {isAdmin && (
           <>
             <TouchableOpacity style={s.navItem}>
               <Text style={s.navItemText}>Usuários</Text>

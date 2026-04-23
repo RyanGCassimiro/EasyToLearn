@@ -4,9 +4,8 @@ import {
   ScrollView, Alert, useWindowDimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuth, Role } from '../context/AuthContext';
-import { Colors, roleColor } from '../constants/theme';
-import RoleToggle from '../components/RoleToggle';
+import { useAuth } from '../context/AuthContext';
+import { Colors } from '../constants/theme';
 import InputField from '../components/InputField';
 
 export default function Login() {
@@ -15,12 +14,9 @@ export default function Login() {
   const router = useRouter();
   const { signIn } = useAuth();
 
-  const [role, setRole] = useState<Role>('morador');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const accent = roleColor(role);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -29,7 +25,7 @@ export default function Login() {
     }
     setLoading(true);
     try {
-      await signIn(email, password, role);
+      await signIn(email, password, 'user');
       router.replace('/dashboard');
     } catch (e: any) {
       Alert.alert('Erro', e.message);
@@ -39,21 +35,14 @@ export default function Login() {
   };
 
   const fillDemo = () => {
-    if (role === 'morador') {
-      setEmail('morador@easy.com');
-      setPassword('123456');
-    } else {
-      setEmail('comercio@easy.com');
-      setPassword('123456');
-    }
+    setEmail('wan@gmail.com');
+    setPassword('123456');
   };
+
+  const accent = Colors.teal;
 
   const form = (
     <View style={s.form}>
-      <View style={s.toggleContainer}>
-        <RoleToggle value={role} onChange={setRole} />
-      </View>
-
       <Text style={s.formTitle}>Acesse sua conta</Text>
       <Text style={[s.formSub, { color: accent }]}>LOGIN</Text>
 
@@ -195,10 +184,6 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: 12,
-  },
-  toggleContainer: {
-    alignItems: 'center',
-    marginBottom: 8,
   },
   link: {
     fontSize: 14,
