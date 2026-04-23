@@ -42,7 +42,7 @@ export default function Landing() {
   const [activeReq, setActiveReq] = useState<string | null>(null);
 
 
-const sketches = {
+const sketches: Record<string, any> = {
   login: require('../assets/prototypes/login.png'),
   cadastro: require('../assets/prototypes/cadastro.png'),
   morador: require('../assets/prototypes/dashboard-morador.png'),

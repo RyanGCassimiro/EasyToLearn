@@ -86,6 +86,7 @@ export default function Login() {
         </TouchableOpacity>
       </View>
 
+
       <TouchableOpacity style={s.btnDemo} onPress={fillDemo}>
         <Text style={[s.btnDemoText, { color: accent }]}>Preencher dados demo</Text>
       </TouchableOpacity>
@@ -191,7 +192,7 @@ const s = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     marginTop: 12,
   },
   link: {
