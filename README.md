@@ -11,7 +11,7 @@ Este projeto consiste em uma aplicação web simples que implementa um sistema d
 * Firebase Authentication (e-mail e senha)
 * Firebase Realtime Database
 * Firebase Security Rules
-* HTML + CSS + JavaScript puro
+* HTML + CSS + TypeScrip
 
 ---
 
@@ -119,6 +119,11 @@ npm start
 ```
 
 ---
+
+<img width="1512" height="949" alt="dashboard role user I" src="https://github.com/user-attachments/assets/db037201-d49c-45c0-a303-97a00148bcd5" />
+<img width="1472" height="1048" alt="dashboard role user" src="https://github.com/user-attachments/assets/938640aa-761a-4d95-b02f-dea00d28edfb" />
+<img width="1512" height="949" alt="Dashboard admin" src="https://github.com/user-attachments/assets/211378cd-ef05-4696-9c1f-ed85704d66c8" />
+<img width="1512" height="949" alt="dashboard admin CRUD" src="https://github.com/user-attachments/assets/f0356576-eb6a-4f7b-97bd-af6860b037ec" />
 
 ## 🔒 Segurança
 
